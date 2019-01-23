@@ -22,7 +22,9 @@ def rule_one(f):
     found_clear = False
     found_close_all = False
     found_crud = False
-    for l in f.comment_free:
+    for i, l in enumerate(f.comment_free):
+        if not l:
+            continue
         if re.search(r'clear', l):
             found_clear = True
         if re.search(r'close\s+all', l):
@@ -68,10 +70,11 @@ def rule_one(f):
 def rule_two(f):
     in_function = False
     compound_depth = 0
-    for l in f.comment_free:
+    for i, l in enumerate(f.comment_free):
         if re.search(r'function', l):
             if in_function:
                 print("Nested function detected!")
+                print("Line %d: %s" % (i+1, l))
                 return False
             else:
                 in_function = True
@@ -90,6 +93,16 @@ def rule_two(f):
     return True
 
 # rule 3: figure handles required
+def rule_three(f):
+    for i, l in enumerate(f.comment_free):
+        m = re.search(r'(figure)\s*(\()?', l)
+        if m and m.groups()[1] is None:
+            print("'Figure' invoked with no handle!")
+            print("Line %d: %s" % (i+1, l))
+            return False
+    return True
+
+
 # rule 4: no overloading builtins
 # rule 5: max line len 80 chars
 # rule 6: one statement per line
@@ -97,7 +110,7 @@ def rule_two(f):
 # rule 8: one char around operators (not ':();')
 # rule 9: underscores in var names
 # rule 10: two blank lines between function defs
-# rule 11: commenst
+# rule 11: comments
 
 
 def parse_args():
@@ -105,10 +118,9 @@ def parse_args():
 
 def strip_comments(ll):
     new_lines = []
-    for l in ll:
+    for i, l in enumerate(ll):
         l = re.sub(r'\s*%.*', '', l)
-        if l:
-            new_lines.append(l)
+        new_lines.append(l)  # Preserving blank lines to preserve line nums.
     return new_lines
 
 def read_file(filename):
@@ -124,6 +136,7 @@ def main():
     valid = True
     valid &= rule_one(matlab_file)
     valid &= rule_two(matlab_file)
+    valid &= rule_three(matlab_file)
     if (not valid):
         print("File not valid.")
         sys.exit(-1)
