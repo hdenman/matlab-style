@@ -104,7 +104,32 @@ def rule_three(f):
 
 
 # rule 4: no overloading builtins
+def rule_four(f):
+    words = ['zeros', 'ones', 'rand', 'true', 'false', 'eye', 'diag', 'blkdiag', 'cat', 'horzcat', 'vertcat', 'repelem', 'repmat',
+             'linspace', 'logspace', 'freqspace', 'meshgrid', 'ndgrid',
+             'length', 'size', 'ndims', 'numel', 'isscalar', 'issorted', 'issortedrows', 'isvector', 'ismatrix', 'isrow', 'iscolumn', 'isempty']
+    words_re = '|'.join(words)
+    # print(words_re)
+    for i, l in enumerate(f.comment_free):
+        m = re.search(r'(' + words_re + r')\s*[^$]', l)
+        if m:
+            w = m.groups(1)
+            print("Builtin %s overloaded!" % (w))
+            print("Line %d: %s" % (i+1, l))
+            return False
+    return True
+
+
 # rule 5: max line len 80 chars
+def rule_five(f):
+    for i, l in enumerate(f.lines):
+        if (len(l) > 80):
+            print("Overlong line (80-char limit)!")
+            print("Line %d: %s" % (i+1, l))
+            return False
+    return True
+
+
 # rule 6: one statement per line
 # rule 7: 2-space indent
 # rule 8: one char around operators (not ':();')
@@ -137,6 +162,8 @@ def main():
     valid &= rule_one(matlab_file)
     valid &= rule_two(matlab_file)
     valid &= rule_three(matlab_file)
+    valid &= rule_four(matlab_file)
+    valid &= rule_five(matlab_file)
     if (not valid):
         print("File not valid.")
         sys.exit(-1)
