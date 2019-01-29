@@ -111,7 +111,7 @@ def rule_four(f):
     words_re = '|'.join(words)
     # print(words_re)
     for i, l in enumerate(f.comment_free):
-        m = re.search(r'(' + words_re + r')\s*[^$]', l)
+        m = re.search(r'(' + words_re + r')\s*=', l)
         if m:
             w = m.groups(1)
             print("Builtin %s overloaded!" % (w))
