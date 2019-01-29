@@ -174,6 +174,8 @@ def main():
     valid &= rule_four(matlab_file)
     valid &= rule_five(matlab_file)
     valid &= rule_six(matlab_file)
+
+    
     if (not valid):
         print("File not valid.")
         sys.exit(-1)
