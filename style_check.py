@@ -131,6 +131,15 @@ def rule_five(f):
 
 
 # rule 6: one statement per line
+def rule_six(f):
+    for i, l in enumerate(f.comment_free):
+        m = re.search(r';\s*[^\s]', l)
+        if m:
+            print("Multiple statements on line!")
+            print("Line %d: %s" % (i+1, l))
+            return False
+    return True
+
 # rule 7: 2-space indent
 # rule 8: one char around operators (not ':();')
 # rule 9: underscores in var names
@@ -164,6 +173,7 @@ def main():
     valid &= rule_three(matlab_file)
     valid &= rule_four(matlab_file)
     valid &= rule_five(matlab_file)
+    valid &= rule_six(matlab_file)
     if (not valid):
         print("File not valid.")
         sys.exit(-1)

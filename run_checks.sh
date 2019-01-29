@@ -8,4 +8,5 @@ echo
 for file in failing-examples/* ; do
     echo $file
     python style_check.py $file
+    echo
 done

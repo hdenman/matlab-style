@@ -16,6 +16,9 @@ function second
   a = (1:10)
   b = 0
   a(end+1) = 3
-  while (b==0); if (a[1] == 1); b = 2; end;
+  while (b==0)
+    if (a[1] == 1)
+      b = 2;
+    end
   end
 end

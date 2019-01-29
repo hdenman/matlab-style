@@ -1,4 +1,5 @@
-clear; close all;
+clear;
+close all;
 
 figure;
 
