@@ -108,7 +108,8 @@ def rule_four(f):
     words = ['zeros', 'ones', 'rand', 'true', 'false', 'eye', 'diag', 'blkdiag', 'cat', 'horzcat', 'vertcat', 'repelem', 'repmat',
              'linspace', 'logspace', 'freqspace', 'meshgrid', 'ndgrid',
              'length', 'size', 'ndims', 'numel', 'isscalar', 'issorted', 'issortedrows', 'isvector', 'ismatrix', 'isrow', 'iscolumn', 'isempty']
-    words_re = '|'.join(words)
+    word_res = [r'(?<!\w)' + x + r'(?!\w)' for x in words]
+    words_re = '|'.join(word_res)
     # print(words_re)
     for i, l in enumerate(f.comment_free):
         m = re.search(r'(' + words_re + r')\s*=', l)
@@ -175,7 +176,7 @@ def main():
     valid &= rule_five(matlab_file)
     valid &= rule_six(matlab_file)
 
-    
+
     if (not valid):
         print("File not valid.")
         sys.exit(-1)
