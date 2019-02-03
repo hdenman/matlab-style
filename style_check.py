@@ -144,11 +144,23 @@ def rule_five(f):
 # rule 6: one statement per line
 def rule_six(f):
     for i, l in enumerate(f.comment_free):
-        m = re.search(r';\s*[^\s]', l)
-        if m:
-            print("Multiple statements on line!")
-            print("Line %d: %s" % (i+1, l))
-            return False
+        in_square_bracket = 0
+        hit_semicolon = False
+        for c in l:
+            if c == '[':
+                in_square_bracket += 1
+                continue
+            if c == ']':
+                in_square_bracket -= 1
+                continue
+            if c == ';' and in_square_bracket == 0:
+                hit_semicolon = True
+                continue
+            if c != ' ' and hit_semicolon:
+                print("Multiple statements on line!")
+                print("Line %d: %s" % (i+1, l))
+                print(in_square_bracket)
+                return False
     return True
 
 # rule 7: 2-space indent
@@ -171,7 +183,7 @@ def strip_comments(ll):
 def read_file(filename):
     f = open(filename)
     c = f.read()
-    l = c.splitlines(False)
+    l = c.splitlines(False)  # False: discard line end chars
     m = MatlabFile(contents = c, lines = l, comment_free = strip_comments(l))
     return m
 
