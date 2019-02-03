@@ -9,6 +9,11 @@ MatlabFile = collections.namedtuple(
         'comment_free'  # array of lines (blanks lines and comments stripped)
     ], defaults = [None, None, None])
 
+
+# Make an RE which matches the word x
+def word_re(x):
+    return r'(?<!\w)' + x + r'(?!\w)'
+
 ### Rule 1: Scripts
 # Scripts are allowed if the first invocations are
 # 'clear' and 'close all'
@@ -25,9 +30,9 @@ def rule_one(f):
     for i, l in enumerate(f.comment_free):
         if not l:
             continue
-        if re.search(r'clear', l):
+        if re.search(word_re('clear'), l):
             found_clear = True
-        if re.search(r'close\s+all', l):
+        if re.search(word_re(r'close\s+all'), l):
             found_close_all = True
         if ((not found_clear) and (not found_close_all)):
             found_crud = True
@@ -71,7 +76,7 @@ def rule_two(f):
     in_function = False
     compound_depth = 0
     for i, l in enumerate(f.comment_free):
-        if re.search(r'function', l):
+        if re.search(word_re('function'), l):
             if in_function:
                 print("Nested function detected!")
                 print("Line %d: %s" % (i+1, l))
@@ -80,7 +85,12 @@ def rule_two(f):
                 in_function = True
         #   while (b==0); if (a[1] == 1); b = 2; end;
         #   end
-        m = re.findall(r'(?:for|while|switch|try|if|parfor).+?(?=for|while|switch|try|if|parfor|$)', l)
+        control_words = ['for', 'while', 'switch', 'try', 'if', 'parfor']
+        word_res = [word_re(x) for x in control_words]
+        nonmatch_group = r'(?:' + '|'.join(word_res) + ')'
+        lookahead = r'(?=' + '|'.join(word_res + ['$']) + ')'
+        # m = re.findall(r'(?:for|while|switch|try|if|parfor).+?(?=for|while|switch|try|if|parfor|$)', l)
+        m = re.findall(nonmatch_group + '.+?' + lookahead, l)
         if m:
             compound_depth += len(m)
         if re.search(r'end(?!.*\))', l):  # 'end' not followed by ')'
@@ -95,7 +105,7 @@ def rule_two(f):
 # rule 3: figure handles required
 def rule_three(f):
     for i, l in enumerate(f.comment_free):
-        m = re.search(r'(figure)\s*(\()?', l)
+        m = re.search(r'(' + word_re('figure') + ')\s*(\()?', l)
         if m and m.groups()[1] is None:
             print("'Figure' invoked with no handle!")
             print("Line %d: %s" % (i+1, l))
@@ -108,7 +118,7 @@ def rule_four(f):
     words = ['zeros', 'ones', 'rand', 'true', 'false', 'eye', 'diag', 'blkdiag', 'cat', 'horzcat', 'vertcat', 'repelem', 'repmat',
              'linspace', 'logspace', 'freqspace', 'meshgrid', 'ndgrid',
              'length', 'size', 'ndims', 'numel', 'isscalar', 'issorted', 'issortedrows', 'isvector', 'ismatrix', 'isrow', 'iscolumn', 'isempty']
-    word_res = [r'(?<!\w)' + x + r'(?!\w)' for x in words]
+    word_res = [word_re(x) for x in words]
     words_re = '|'.join(word_res)
     # print(words_re)
     for i, l in enumerate(f.comment_free):
