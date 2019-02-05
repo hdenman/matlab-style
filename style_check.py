@@ -16,7 +16,7 @@ def word_re(x):
 
 ### Rule 1: Scripts
 # Scripts are allowed if the first invocations are
-# 'clear' and 'close all'
+# 'clear' and 'close all' (and optionally 'clc')
 #
 # We will allow some comments and blank lines at the start.
 #
