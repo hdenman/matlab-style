@@ -22,10 +22,13 @@ def word_re(x):
 #
 # A file containing a function definition is also OK.
 def rule_one(f):
-    # match 'clear' and 'close all' (in either order)
+    # match either 'clear' and 'close all' (in either order)
+    # or 'function'
     valid = True
     found_clear = False
     found_close_all = False
+    found_clc = False
+    found_function = False
     found_crud = False
     for i, l in enumerate(f.comment_free):
         if not l:
@@ -34,15 +37,20 @@ def rule_one(f):
             found_clear = True
         if re.search(word_re(r'close\s+all'), l):
             found_close_all = True
-        if ((not found_clear) and (not found_close_all)):
+        if re.search(word_re(r'function'), l):
+            found_function = True
+        if re.search(word_re(r'clc'), l):
+            found_clc = True
+        if (((not found_clear) and (not found_close_all)) and
+            (not found_function) and (not found_clc)):
             found_crud = True
 
-    needfuls_present = found_close_all and found_clear
-    if (not needfuls_present):
-        print("Your file did not contain 'close all' and 'clear'!")
+    valid_script = (found_close_all and found_clear)
+    if (not valid_script) and (not found_function):
+        print("Your script file did not contain 'close all' and 'clear'!")
         valid = False
-    if (needfuls_present and found_crud):
-        print("Your file had invocations before 'close all' and 'clear'!")
+    if (valid_script and found_crud):
+        print("Your script file had invocations before 'close all' and 'clear'!")
         valid = False
 
     return valid
@@ -159,7 +167,6 @@ def rule_six(f):
             if c != ' ' and hit_semicolon:
                 print("Multiple statements on line!")
                 print("Line %d: %s" % (i+1, l))
-                print(in_square_bracket)
                 return False
     return True
 
