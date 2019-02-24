@@ -2,6 +2,7 @@ import collections
 import re
 import sys
 
+
 MatlabFile = collections.namedtuple(
     'MatlabFile', [
         'contents',  # contents of .m-file (one string)
@@ -13,6 +14,7 @@ MatlabFile = collections.namedtuple(
 # Make an RE which matches the word x
 def word_re(x):
     return r'(?<!\w)' + x + r'(?!\w)'
+
 
 ### Rule 1: Scripts
 # Scripts are allowed if the first invocations are
@@ -171,7 +173,83 @@ def rule_six(f):
     return True
 
 # rule 7: 2-space indent
-# rule 8: one char around operators (not ':();')
+def rule_seven(f):
+    return True
+
+def strip_strings(l):
+    stripped = ""
+    last_char = None
+    in_string = False
+    for c in l:
+        if c != '\'' and in_string:
+            continue
+        if c == '\'' and in_string:
+            in_string = False
+            stripped += c
+            continue
+        if c == '\'' and (not in_string):
+            if (re.match(r'[a-z0-9A-Z]', last_char)):
+                # Transpose operator
+                stripped += c
+                continue
+            else:
+                stripped += c
+                in_string = True
+                continue
+        stripped += c
+        last_char = c
+    return stripped
+
+
+# rule 8: one space char around operators (not ':();')
+def rule_eight(f):
+    passed = True
+    # define list of operators
+    ops = ['+', '-', '.*', '*', './', '/', '.\\', '\\', '.^', '^', ',',
+           '==', '=', '~=', '<', '<=', '>', '>=', '&', '|', '&&', '||', '~']
+    # omitting transpose operators, as you couldn't write <A '>
+    # skip strings
+
+    # scan to establish what characters can legitimately precede / follow each operator,
+    # other than space (must be from another operator)
+    ops_data = []
+    for o in ops:
+        pres = " "
+        posts = ""
+        if o == "+" or o == "-":
+            # Allow for unary operators
+            pres += re.escape('(')
+            posts += '\d\.\w'
+        for o2 in ops:
+            if (o == o2):
+                continue
+            if len(o2) > 1 and o2[1] == o:
+                pres += re.escape(o2[0])
+            if o2[0] == o and len(o2) > 1:
+                posts += re.escape(o2[1])
+        ops_data += [(re.escape(o), pres, posts)]
+    # print(ops_data)
+
+    # scan the list of operators to define
+    space_pre = lambda x: r'(  |[^ ' + x[1] + '])' + x[0]
+    space_post = lambda x: x[0] + r'(  |[^ ' + x[2] + '])'
+    op_res = [f(x) for x in ops_data for f in (space_pre, space_post)]
+    # Match against operator preceded by non-space
+    # or operator followed by non-space.
+    op_re = '|'.join(op_res)
+    # print(op_re)
+    for i, l in enumerate(f.comment_free):
+        l_no_string = strip_strings(l)
+
+        m = re.search(op_re, l_no_string)
+        if m:
+            print("One space around operators!")
+            print("Line %d: %s" % (i+1, l))
+            passed = False
+    return passed
+
+
+
 # rule 9: underscores in var names
 # rule 10: two blank lines between function defs
 # rule 11: comments
@@ -204,7 +282,8 @@ def main():
     valid &= rule_four(matlab_file)
     valid &= rule_five(matlab_file)
     valid &= rule_six(matlab_file)
-
+    valid &= rule_seven(matlab_file)
+    valid &= rule_eight(matlab_file)
 
     if (not valid):
         print("File not valid.")
