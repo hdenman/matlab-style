@@ -205,7 +205,7 @@ def strip_strings(l):
 def rule_eight(f):
     passed = True
     # define list of operators
-    ops = ['+', '-', '.*', '*', './', '/', '.\\', '\\', '.^', '^', ',',
+    ops = ['+', '-', '.*', '*', './', '/', '.\\', '\\', '.^', '^',
            '==', '=', '~=', '<', '<=', '>', '>=', '&', '|', '&&', '||', '~']
     # omitting transpose operators, as you couldn't write <A '>
     # skip strings
@@ -215,7 +215,7 @@ def rule_eight(f):
     ops_data = []
     for o in ops:
         pres = " "
-        posts = ""
+        posts = " "
         if o == "+" or o == "-":
             # Allow for unary operators
             pres += re.escape('(')
@@ -231,8 +231,8 @@ def rule_eight(f):
     # print(ops_data)
 
     # scan the list of operators to define
-    space_pre = lambda x: r'(  |[^ ' + x[1] + '])' + x[0]
-    space_post = lambda x: x[0] + r'(  |[^ ' + x[2] + '])'
+    space_pre = lambda x: r'(  |[^' + x[1] + '])' + x[0]
+    space_post = lambda x: x[0] + r'(  |[^' + x[2] + '])'
     op_res = [f(x) for x in ops_data for f in (space_pre, space_post)]
     # Match against operator preceded by non-space
     # or operator followed by non-space.
@@ -246,6 +246,12 @@ def rule_eight(f):
             print("One space around operators!")
             print("Line %d: %s" % (i+1, l))
             passed = False
+        m = re.search(r' ,|,  ', l_no_string)
+        if m:
+            print("No space before ',', one space after!")
+            print("Line %d: %s" % (i+1, l))
+            passed = False
+
     return passed
 
 
