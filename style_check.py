@@ -172,10 +172,6 @@ def rule_six(f):
                 return False
     return True
 
-# rule 7: 2-space indent
-def rule_seven(f):
-    return True
-
 def strip_strings(l):
     stripped = ""
     last_char = None
@@ -199,6 +195,49 @@ def strip_strings(l):
         stripped += c
         last_char = c
     return stripped
+
+# rule 7: 2-space indent
+def rule_seven(f):
+    scope_increasers = ['while', 'for', 'if', 'function', 'parfor', 'else']
+    scope_decreasers = ['end', 'else']
+    scope_increase_res = [word_re(x) for x in scope_increasers]
+    scope_increase_re =  '|'.join(scope_increase_res)
+    scope_decrease_res = [word_re(x) for x in scope_decreasers]
+    scope_decrease_re =  '|'.join(scope_decrease_res)
+
+    expected_indent = 0
+    INDENT = 2
+    valid = True
+    run_on_line = False
+    for i, l in enumerate(f.comment_free):
+        l_no_string = strip_strings(l)
+        # Skip blank lines
+        if re.match('^\s*$', l_no_string):
+            continue
+
+        if re.search(scope_decrease_re, l_no_string):
+            expected_indent -= INDENT
+
+        # Check indent
+        indent_re = r'^' + r' ' * expected_indent
+        if not run_on_line:
+            indent_re +=  r'[^\s]'
+        if not (re.search(indent_re, l_no_string)):
+            actual_indent = len(l_no_string) - len(l_no_string.lstrip(' '))
+            print("Indent problem! Expected %d, found %d." % (expected_indent, actual_indent))
+            print("Line %d: %s" % (i+1, l))
+            valid = False
+
+        if re.search(scope_increase_re, l_no_string):
+            expected_indent += INDENT
+
+        if re.search('...$', l_no_string):
+            run_on_line = True
+        else:
+            run_on_line = False
+
+
+    return valid
 
 
 # rule 8: one space char around operators (not ':();')
