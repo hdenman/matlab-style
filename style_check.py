@@ -246,7 +246,7 @@ def rule_eight(f):
             print("One space around operators!")
             print("Line %d: %s" % (i+1, l))
             passed = False
-        m = re.search(r' ,|,  ', l_no_string)
+        m = re.search(r' ,|(,([^ ]|  ))', l_no_string)
         if m:
             print("No space before ',', one space after!")
             print("Line %d: %s" % (i+1, l))
@@ -295,7 +295,7 @@ def main():
         print("File not valid.")
         sys.exit(-1)
     else:
-        print("File valid.")
+        print("File probably OK.")
         sys.exit(0)
 
 main()
